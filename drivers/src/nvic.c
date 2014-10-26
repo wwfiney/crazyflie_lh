@@ -70,6 +70,25 @@ void DONT_DISCARD NMI_Handler(void)
 /**
  * @brief  This function handles Hard Fault exception.
  */
+ #if defined(__CC_ARM)
+ __asm void DONT_DISCARD HardFault_Handler(void)
+{
+  //http://www.st.com/mcu/forums-cat-6778-23.html
+  //****************************************************
+  //To test this application, you can use this snippet anywhere:
+  // //Let's crash the MCU!
+  // asm (" MOVS r0, #1 \n"
+  // " LDM r0,{r1-r2} \n"
+  // " BX LR; \n");
+  PRESERVE8
+    IMPORT printHardFault
+    TST r14, #4
+    ITE EQ
+    MRSEQ R0, MSP
+    MRSNE R0, PSP
+    B printHardFault
+}
+ #else
 void DONT_DISCARD HardFault_Handler(void)
 {
   //http://www.st.com/mcu/forums-cat-6778-23.html
@@ -85,6 +104,7 @@ void DONT_DISCARD HardFault_Handler(void)
   "MRSNE R0, PSP \n"
   "B printHardFault");
 }
+ #endif
 
 void DONT_DISCARD printHardFault(uint32_t* hardfaultArgs)
 {
@@ -203,6 +223,18 @@ void DONT_DISCARD EXTI9_5_IRQHandler(void)
   extiInterruptHandler();
 }
 
+void DONT_DISCARD EXTI0_IRQHandler(void)
+{
+  extiInterruptHandler();
+}
+
+
+
+void DONT_DISCARD USART1_IRQHandler(void)
+{
+  uartIsr();
+}
+
 void DONT_DISCARD USART3_IRQHandler(void)
 {
   uartIsr();
@@ -228,7 +260,7 @@ void DONT_DISCARD I2C1_ER_IRQHandler(void)
 
 void DONT_DISCARD I2C2_EV_IRQHandler(void)
 {
-
+    i2cInterruptHandlerI2c2();
 }
 
 void DONT_DISCARD I2C2_ER_IRQHandler(void)

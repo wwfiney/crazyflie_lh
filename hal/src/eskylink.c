@@ -59,9 +59,9 @@ static char address[4] = {0x00, 0x00, 0x00, 0xBB};
 static char packet[32];
 
 /* Synchronisation */
-xSemaphoreHandle dataRdy;
+static xSemaphoreHandle dataRdy;
 /* Data queue */
-xQueueHandle rxQueue;
+static xQueueHandle rxQueue;
 
 static struct {
   bool enabled;
@@ -110,12 +110,23 @@ static int receivePacket(CRTPPacket * pk)
   return 0;
 }
 
+#if defined(__CC_ARM)
+static struct crtpLinkOperations eskyOp =
+{
+  setEnable,
+  sendPacket,
+  receivePacket,
+	NULL,
+	NULL
+};
+#else
 static struct crtpLinkOperations eskyOp =
 {
   .setEnable         = setEnable,
   .sendPacket        = sendPacket,
   .receivePacket     = receivePacket,
 };
+#endif
 
 static int eskylinkFetchData(char * packet, int dataLen)
 {

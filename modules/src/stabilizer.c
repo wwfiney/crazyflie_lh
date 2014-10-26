@@ -42,6 +42,7 @@
 #include "ledseq.h"
 #include "param.h"
 #include "ms5611.h"
+#include "debug.h"
 
 #undef max
 #define max(a,b) ((a) > (b) ? (a) : (b))
@@ -221,8 +222,8 @@ void stabilizerInit(void)
   pitchRateDesired = 0;
   yawRateDesired = 0;
 
-  //xTaskCreate(stabilizerTask, (const signed char * const)"STABILIZER",
-  //            2*configMINIMAL_STACK_SIZE, NULL, /*Piority*/2, NULL);
+  xTaskCreate(stabilizerTask, (const signed char * const)"STABILIZER",
+              2*configMINIMAL_STACK_SIZE, NULL, /*Piority*/2, NULL);
 #endif
   isInit = TRUE;
 }
@@ -233,7 +234,7 @@ bool stabilizerTest(void)
 
   pass &= motorsTest();
   pass &= imu6Test();
-  //pass &= sensfusion6Test();
+  pass &= sensfusion6Test();
   //pass &= controllerTest();
 
   return pass;
@@ -299,6 +300,12 @@ static void stabilizerTask(void* param)
         yawRateDesired = -eulerYawDesired;
       }
 
+      //if(eulerYawDesired > 0.0) {
+            //DEBUG_PRINT("yd:%f\n", eulerYawDesired);
+            //DEBUG_PRINT("ya:%f\n", eulerYawActual);
+            //DEBUG_PRINT("yrd:%f, %f\n", yawRateDesired, gyro.z);
+        //}
+
       // TODO: Investigate possibility to subtract gyro drift.
       controllerCorrectRatePID(gyro.x, -gyro.y, gyro.z,
                                rollRateDesired, pitchRateDesired, yawRateDesired);
@@ -313,9 +320,11 @@ static void stabilizerTask(void* param)
       else
       {
         // Added so thrust can be set to 0 while in altitude hold mode after disconnect
-        commanderWatchdog();
+        //commanderWatchdog();
       }
 
+      //DEBUG_PRINT("%d %d %d %d\n", actuatorThrust, actuatorRoll, actuatorPitch, -actuatorYaw);
+//#define TUNE_PITCH
       if (actuatorThrust > 0)
       {
 #if defined(TUNE_ROLL)
@@ -365,11 +374,12 @@ static void stabilizerAltHoldUpdate(void)
   // Altitude hold mode just activated, set target altitude as current altitude. Reuse previous integral term as a starting point
   if (setAltHold)
   {
+		// Cache last integral term for reuse after pid init
+    const float pre_integral = altHoldPID.integ;
     // Set to current altitude
     altHoldTarget = asl;
 
-    // Cache last integral term for reuse after pid init
-    const float pre_integral = altHoldPID.integ;
+    
 
     // Reset PID controller
     pidInit(&altHoldPID, asl, altHoldKp, altHoldKi, altHoldKd,
@@ -418,16 +428,34 @@ static void stabilizerAltHoldUpdate(void)
   }
 }
 
+#define QUAD_FORMATION_X
+#define ROLL_TEMP       1800
 static void distributePower(const uint16_t thrust, const int16_t roll,
                             const int16_t pitch, const int16_t yaw)
 {
 #ifdef QUAD_FORMATION_X
-  roll = roll >> 1;
-  pitch = pitch >> 1;
-  motorPowerM1 = limitThrust(thrust - roll + pitch + yaw);
-  motorPowerM2 = limitThrust(thrust - roll - pitch - yaw);
-  motorPowerM3 =  limitThrust(thrust + roll - pitch + yaw);
-  motorPowerM4 =  limitThrust(thrust + roll + pitch - yaw);
+    int16_t roll_val = roll >> 1;
+    int16_t pitch_val = pitch >> 1;
+
+    //if(roll_val > ROLL_TEMP)
+        //roll_val = roll_val - ROLL_TEMP;
+
+    //if((yaw > 0) || (yaw < 0)) {
+        //DEBUG_PRINT("y:%d\n", yaw);
+    //}
+  //roll = roll >> 1;
+  //pitch = pitch >> 1;
+  if(thrust > 12000) {
+  motorPowerM1 = limitThrust(thrust - roll_val + pitch_val + yaw);
+  motorPowerM2 = limitThrust(thrust - roll_val - pitch_val - yaw);
+  motorPowerM3 =  limitThrust(thrust + roll_val - pitch_val + yaw);
+  motorPowerM4 =  limitThrust(thrust + roll_val + pitch_val - yaw);
+  } else {
+    motorPowerM1 = 0;
+  motorPowerM2 = 0;
+  motorPowerM3 =  0;
+  motorPowerM4 =  0;
+  }
 #else // QUAD_FORMATION_NORMAL
   motorPowerM1 = limitThrust(thrust + pitch + yaw);
   motorPowerM2 = limitThrust(thrust - roll - yaw);

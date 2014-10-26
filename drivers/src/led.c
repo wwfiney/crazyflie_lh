@@ -36,6 +36,22 @@
 
 static bool isInit=false;
 
+#if defined(__CC_ARM)
+static GPIO_TypeDef* led_port[] = {
+	LED_GPIO_PORT,
+  LED_GPIO_PORT, 
+  
+};
+static unsigned int led_pin[] = {
+  LED_GPIO_RED,
+	LED_GPIO_GREEN,
+};
+static int led_polarity[] = {
+  LED_POL_RED,
+	LED_POL_GREEN,
+};
+
+#else
 static GPIO_TypeDef* led_port[] = {
   [LED_GREEN] = LED_GPIO_PORT, 
   [LED_RED] = LED_GPIO_PORT,
@@ -48,14 +64,17 @@ static int led_polarity[] = {
   [LED_GREEN] = LED_POL_GREEN, 
   [LED_RED] = LED_POL_RED,
 };
+#endif
 
 //Initialize the green led pin as output
 void ledInit()
 {
+	GPIO_InitTypeDef GPIO_InitStructure;
+	
   if(isInit)
     return;
 
-  GPIO_InitTypeDef GPIO_InitStructure;
+  
 
   // Enable GPIO
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC, ENABLE);

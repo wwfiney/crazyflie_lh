@@ -138,6 +138,8 @@ bool ms5611EvaluateSelfTest(float min, float max, float value, char* string)
 
 float ms5611GetPressure(uint8_t osr)
 {
+	int64_t off;
+	int64_t sens; 
   // see datasheet page 7 for formulas
   int32_t rawPress = ms5611RawPressure(osr);
   int64_t dT = (int64_t)ms5611GetDeltaTemp(osr);
@@ -145,8 +147,8 @@ float ms5611GetPressure(uint8_t osr)
   {
     return 0;
   }
-  int64_t off = (((int64_t)calReg.off) << 16) + ((calReg.tco * dT) >> 7);
-  int64_t sens = (((int64_t)calReg.psens) << 15) + ((calReg.tcs * dT) >> 8);
+  off = (((int64_t)calReg.off) << 16) + ((calReg.tco * dT) >> 7);
+  sens = (((int64_t)calReg.psens) << 15) + ((calReg.tcs * dT) >> 8);
   if (rawPress != 0)
   {
     return ((((rawPress * sens) >> 21) - off) >> (15 - EXTRA_PRECISION))

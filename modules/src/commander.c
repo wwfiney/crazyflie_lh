@@ -75,6 +75,24 @@ bool commanderTest(void)
   return isInit;
 }
 
+//lh test
+void updateRPY(float roll, float pitch, float yaw, uint16_t thrust)
+{
+    if(thrust > 1200) {
+        thrust = MIN_THRUST + (thrust - 1000) * 50;
+    } else {
+        thrust = 0;
+    }
+    
+    targetVal[!side].roll = roll;
+    targetVal[!side].pitch = pitch;
+    targetVal[!side].yaw = yaw;
+    targetVal[!side].thrust= thrust;
+    
+    side = !side;
+    commanderWatchdogReset();
+}
+
 static void commanderCrtpCB(CRTPPacket* pk)
 {
   targetVal[!side] = *((struct CommanderCrtpValues*)pk->data);
@@ -140,12 +158,18 @@ void commanderGetRPYType(RPYType* rollType, RPYType* pitchType, RPYType* yawType
   *rollType  = ANGLE;
   *pitchType = ANGLE;
   *yawType   = RATE;
+  //*yawType   = ANGLE;
 }
 
 void commanderGetThrust(uint16_t* thrust)
 {
   int usedSide = side;
   uint16_t rawThrust = targetVal[usedSide].thrust;
+
+#if 0
+  *thrust = 10000;
+#else
+
 
   if (rawThrust > MIN_THRUST)
   {
@@ -160,6 +184,7 @@ void commanderGetThrust(uint16_t* thrust)
   {
     *thrust = MAX_THRUST;
   }
+#endif
 
   commanderWatchdog();
 }

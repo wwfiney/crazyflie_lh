@@ -118,14 +118,14 @@ static void adcDecimate(AdcGroup* oversampled, AdcGroup* decimated)
 
 void adcInit(void)
 {
-
-  if(isInit)
-    return;
-
-  ADC_InitTypeDef ADC_InitStructure;
+	ADC_InitTypeDef ADC_InitStructure;
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
   TIM_OCInitTypeDef TIM_OCInitStructure;
   NVIC_InitTypeDef NVIC_InitStructure;
+  if(isInit)
+    return;
+
+  
 
   // Enable TIM2, GPIOA and ADC1 clock
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);

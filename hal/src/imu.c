@@ -116,7 +116,7 @@ static void imuAccIIRLPFilter(Axis3i16* in, Axis3i16* out,
 static void imuAccAlignToGravity(Axis3i16* in, Axis3i16* out);
 
 // TODO: Fix __errno linker error with math lib
-int __attribute__((used)) __errno;
+static int __attribute__((used)) __errno;
 
 static bool isInit;
 
@@ -317,8 +317,13 @@ void imu6Read(Axis3f* gyroOut, Axis3f* accOut)
   imuAccAlignToGravity(&accelLPF, &accelLPFAligned);
 
   // Re-map outputs
-  gyroOut->x = (gyroMpu.x - gyroBias.bias.x) * IMU_DEG_PER_LSB_CFG;
-  gyroOut->y = (gyroMpu.y - gyroBias.bias.y) * IMU_DEG_PER_LSB_CFG;
+  #if 1
+  gyroOut->y = (gyroMpu.x - gyroBias.bias.x) * IMU_DEG_PER_LSB_CFG;
+  gyroOut->x = (gyroMpu.y - gyroBias.bias.y) * IMU_DEG_PER_LSB_CFG;
+  #else
+    gyroOut->x = (gyroMpu.x - gyroBias.bias.x) * IMU_DEG_PER_LSB_CFG;
+    gyroOut->y = (gyroMpu.y - gyroBias.bias.y) * IMU_DEG_PER_LSB_CFG;
+  #endif
   gyroOut->z = (gyroMpu.z - gyroBias.bias.z) * IMU_DEG_PER_LSB_CFG;
   accOut->x = (accelLPFAligned.x - accelBias.bias.x) * IMU_G_PER_LSB_CFG;
   accOut->y = (accelLPFAligned.y - accelBias.bias.y) * IMU_G_PER_LSB_CFG;

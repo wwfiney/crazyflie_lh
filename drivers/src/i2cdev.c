@@ -64,7 +64,12 @@ xSemaphoreHandle i2cdevDmaEventI2c2;
 uint8_t* Buffer_Rx1;
 /* Buffer of data to be transmitted by I2C1 */
 uint8_t* Buffer_Tx1;
-__IO uint32_t I2CDirection;
+/* Buffer of data to be received by I2C2 */
+uint8_t* Buffer_Rx2;
+/* Buffer of data to be transmitted by I2C2 */
+uint8_t* Buffer_Tx2;
+
+static __IO uint32_t I2CDirection;
 
 static void i2cdevResetBusI2c1(void);
 static void i2cdevResetBusI2c2(void);
@@ -105,8 +110,8 @@ int i2cdevInit(I2C_TypeDef *I2Cx)
   }
   else if (I2Cx == I2C2)
   {
-    i2cdevResetBusI2c2();
-    //I2C_LowLevel_Init(I2Cx);
+    //i2cdevResetBusI2c2();
+    I2C_LowLevel_Init(I2Cx);
     // Enable the DMA1 channel4 Interrupt
     NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = NVIC_ADC_PRI;
@@ -264,11 +269,12 @@ static inline void i2cdevRuffLoopDelay(uint32_t us)
 
 static void i2cdevResetBusI2c1(void)
 {
+	GPIO_InitTypeDef  GPIO_InitStructure;
   /* Reset the I2C block */
   I2C_DeInit(I2C1);
 
   /* Make sure the bus is free by clocking it until any slaves release the bus. */
-  GPIO_InitTypeDef  GPIO_InitStructure;
+  
 
   /* I2C1 clock enable */
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
@@ -327,11 +333,13 @@ static void i2cdevResetBusI2c1(void)
 
 static void i2cdevResetBusI2c2(void)
 {
-  /* Reset the I2C block */
-  I2C_DeInit(I2C2);
+  
 
   /* Make sure the bus is free by clocking it until any slaves release the bus. */
   GPIO_InitTypeDef  GPIO_InitStructure;
+	
+	/* Reset the I2C block */
+  I2C_DeInit(I2C2);
 
   /* I2C1 clock enable */
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);

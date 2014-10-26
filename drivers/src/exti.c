@@ -31,19 +31,21 @@
 #include "nvicconf.h"
 #include "nrf24l01.h"
 
-#define RADIO_GPIO_IRQ_LINE EXTI_Line9
+#define RADIO_GPIO_IRQ_LINE EXTI_Line0
 
 static bool isInit;
 
 /* Interruption initialisation */
 void extiInit()
 {
-  if (isInit)
-    return;
+  
 
   NVIC_InitTypeDef NVIC_InitStructure;
+	
+	if (isInit)
+    return;
 
-  NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = NVIC_RADIO_PRI;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;

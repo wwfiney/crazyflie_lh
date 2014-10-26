@@ -31,6 +31,9 @@
 #define MS5611_H
 
 #include <stdbool.h>
+#if defined(__CC_ARM)
+#include <stdint.h>
+#endif
 
 // addresses of the device
 #define MS5611_ADDR_CSB_HIGH  0x76   //CBR=1 0x76 I2C address when CSB is connected to HIGH (VCC)

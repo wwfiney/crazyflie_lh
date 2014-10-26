@@ -55,6 +55,19 @@
 #define ERROR(...)
 #endif
 
+#if defined(__CC_ARM)
+static const uint8_t typeLength[] = {
+  1,
+  2,
+  4,
+  1,
+  2,
+  4,
+  4,
+  2,
+};
+
+#else
 
 static const uint8_t typeLength[] = {
   [LOG_UINT8]  = 1,
@@ -66,6 +79,7 @@ static const uint8_t typeLength[] = {
   [LOG_FLOAT]  = 4,
   [LOG_FP16]   = 2,
 };
+#endif
 
 // Maximum log payload length
 #define LOG_MAX_LEN 30
@@ -121,8 +135,15 @@ void logRunBlock(void * arg);
 void logBlockTimed(xTimerHandle timer);
 
 //These are set by the Linker
+#if defined(__CC_ARM)
+extern unsigned int Image$$LOG$$Base;
+extern unsigned int Image$$LOG$$Length;
+extern unsigned int Image$$LOG$$ZI$$Length;
+
+#else
 extern struct log_s _log_start;
 extern struct log_s _log_stop;
+#endif
 
 //Pointer to the logeters list and length of it
 static struct log_s * logs;
@@ -147,9 +168,16 @@ void logInit(void)
   if(isInit)
     return;
 
+#if defined(__CC_ARM)
+    logs = (struct log_s*)&Image$$LOG$$Base;
+  logsLen = (int)&Image$$LOG$$Length+ (int)&Image$$LOG$$ZI$$Length;
+#else
   logs = &_log_start;
   logsLen = &_log_stop - &_log_start;
+#endif
+
   logsCrc = crcSlow(logs, logsLen);
+
   
   // Big lock that protects the log datastructures
   logLock = xSemaphoreCreateMutex();

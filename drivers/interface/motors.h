@@ -39,10 +39,19 @@
 
 /******** Defines ********/
 
+//#define PROJ_SNAKE
+
+#ifdef PROJ_SNAKE
+#define MOTORS_PWM_BITS     9
+#define MOTORS_PWM_PERIOD   ((1<<MOTORS_PWM_BITS) - 1)
+#define MOTORS_PWM_PRESCALE 0
+#else
 //The following defines gives a PWM of 9 bits at ~140KHz for a sysclock of 72MHz
 #define MOTORS_PWM_BITS     9
 #define MOTORS_PWM_PERIOD   ((1<<MOTORS_PWM_BITS) - 1)
 #define MOTORS_PWM_PRESCALE 0
+
+#endif
 
 
 // Motors IDs define

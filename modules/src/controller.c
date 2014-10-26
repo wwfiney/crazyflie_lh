@@ -33,6 +33,7 @@
 #include "pid.h"
 #include "param.h"
 #include "imu.h"
+#include "debug.h"
 /*
 #define TRUNCATE_SINT16(out, in) \
   {\
@@ -108,6 +109,7 @@ void controllerCorrectAttitudePID(
        float eulerRollDesired, float eulerPitchDesired, float eulerYawDesired,
        float* rollRateDesired, float* pitchRateDesired, float* yawRateDesired)
 {
+	float yawError;
   pidSetDesired(&pidRoll, eulerRollDesired);
   *rollRateDesired = pidUpdate(&pidRoll, eulerRollActual, TRUE);
 
@@ -116,12 +118,15 @@ void controllerCorrectAttitudePID(
   *pitchRateDesired = pidUpdate(&pidPitch, eulerPitchActual, TRUE);
 
   // Update PID for yaw axis
-  float yawError;
+  
   yawError = eulerYawDesired - eulerYawActual;
+  //DEBUG_PRINT("+ye:%f\n", yawError);
   if (yawError > 180.0)
     yawError -= 360.0;
   else if (yawError < -180.0)
     yawError += 360.0;
+
+  //DEBUG_PRINT("-ye:%f\n", yawError);
   pidSetError(&pidYaw, yawError);
   *yawRateDesired = pidUpdate(&pidYaw, eulerYawActual, FALSE);
 }

@@ -51,6 +51,13 @@
 
 #include "console.h"
 
+extern const char * V_SLOCAL_REVISION;
+extern const char * V_STAG;
+extern const char * V_SREVISION;
+extern const bool V_MODIFIED;
+
+
+
 /* Private variable */
 static bool canFly;
 
@@ -79,8 +86,8 @@ void systemInit(void)
   canStartMutex = xSemaphoreCreateMutex();
   xSemaphoreTake(canStartMutex, portMAX_DELAY);
 
-  //configblockInit();
-  //workerInit();
+  configblockInit();
+  workerInit();
   //adcInit();
   ledseqInit();
   //pmInit();
@@ -116,29 +123,32 @@ void systemTask(void *arg)
   //debugInitTrace();
 #endif
 #ifdef ENABLE_UART
-  //uartInit();
+  uartInit();
 #endif
 #endif //ndef USE_UART_CRTP
 
-  //commInit();
+  uartInit();
 
-#if 0
+  vTaskDelay(M2T(4000));
+
+#if 1
 
   DEBUG_PRINT("Crazyflie is up and running!\n");
-  DEBUG_PRINT("Build %s:%s (%s) %s\n", V_SLOCAL_REVISION,
-              V_SREVISION, V_STAG, (V_MODIFIED)?"MODIFIED":"CLEAN");
-  DEBUG_PRINT("I am 0x%X%X%X and I have %dKB of flash!\n",
-              *((int*)(0x1FFFF7E8+8)), *((int*)(0x1FFFF7E8+4)),
-              *((int*)(0x1FFFF7E8+0)), *((short*)(0x1FFFF7E0)));
+  //DEBUG_PRINT("Build %s:%s (%s) %s\n", V_SLOCAL_REVISION,
+  //            V_SREVISION, V_STAG, (V_MODIFIED)?"MODIFIED":"CLEAN");
+  //DEBUG_PRINT("I am 0x%X%X%X and I have %dKB of flash!\n",
+  //            *((int*)(0x1FFFF7E8+8)), *((int*)(0x1FFFF7E8+4)),
+ //             *((int*)(0x1FFFF7E8+0)), *((short*)(0x1FFFF7E0)));
 
-  commanderInit();
+    commInit();
+  //commanderInit();
 #endif
 
   stabilizerInit();
 
   
   //Test the modules
-  pass &= systemTest();
+  //pass &= systemTest();
   //pass &= commTest();
   //pass &= commanderTest();
   pass &= stabilizerTest();
@@ -171,7 +181,7 @@ void systemTask(void *arg)
     }
   }
   
-  //workerLoop();
+  workerLoop();
   
   //Should never reach this point!
   while(1)

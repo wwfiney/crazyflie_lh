@@ -78,7 +78,7 @@ bool mpu6050Test(void)
  */
 bool mpu6050TestConnection()
 {
-  return mpu6050GetDeviceID() == 0b110100;
+  return mpu6050GetDeviceID() == 0x34;//0b110100;
 }
 
 /** Do a MPU6050 self test.
@@ -3459,10 +3459,12 @@ void mpu6050WriteMemoryByte(uint8_t data)
 }
 void mpu6050ReadMemoryBlock(uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address)
 {
-  mpu6050SetMemoryBank(bank, TRUE, TRUE);
-  mpu6050SetMemoryStartAddress(address);
+  
   uint8_t chunkSize;
   uint16_t i;
+	
+	mpu6050SetMemoryBank(bank, TRUE, TRUE);
+  mpu6050SetMemoryStartAddress(address);
 
   for (i = 0; i < dataSize;)
   {

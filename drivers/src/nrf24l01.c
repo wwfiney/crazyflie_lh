@@ -44,34 +44,35 @@
 #include "exti.h"
 
 #include "nRF24L01reg.h"
+#include "debug.h"
 
 /* Defines for the SPI and GPIO pins used to drive the SPI Flash */
-#define RADIO_GPIO_CS             GPIO_Pin_12
-#define RADIO_GPIO_CS_PORT        GPIOB
-#define RADIO_GPIO_CS_PERIF       RCC_APB2Periph_GPIOB
+#define RADIO_GPIO_CS             GPIO_Pin_4
+#define RADIO_GPIO_CS_PORT        GPIOA
+#define RADIO_GPIO_CS_PERIF       RCC_APB2Periph_GPIOA
 
-#define RADIO_GPIO_CLK            GPIO_Pin_8
+#define RADIO_GPIO_CLK            GPIO_Pin_5
 #define RADIO_GPIO_CLK_PORT       GPIOA
 #define RADIO_GPIO_CLK_PERIF      RCC_APB2Periph_GPIOA
 
-#define RADIO_GPIO_CE             GPIO_Pin_10
-#define RADIO_GPIO_CE_PORT        GPIOA
-#define RADIO_GPIO_CE_PERIF       RCC_APB2Periph_GPIOA
+#define RADIO_GPIO_CE             GPIO_Pin_2
+#define RADIO_GPIO_CE_PORT        GPIOB
+#define RADIO_GPIO_CE_PERIF       RCC_APB2Periph_GPIOB
 
-#define RADIO_GPIO_IRQ            GPIO_Pin_9
-#define RADIO_GPIO_IRQ_PORT       GPIOA
-#define RADIO_GPIO_IRQ_PERIF      RCC_APB2Periph_GPIOA
-#define RADIO_GPIO_IRQ_SRC_PORT   GPIO_PortSourceGPIOA
-#define RADIO_GPIO_IRQ_SRC        GPIO_PinSource9
-#define RADIO_GPIO_IRQ_LINE       EXTI_Line9
+#define RADIO_GPIO_IRQ            GPIO_Pin_0
+#define RADIO_GPIO_IRQ_PORT       GPIOB
+#define RADIO_GPIO_IRQ_PERIF      RCC_APB2Periph_GPIOB
+#define RADIO_GPIO_IRQ_SRC_PORT   GPIO_PortSourceGPIOB
+#define RADIO_GPIO_IRQ_SRC        GPIO_PinSource0
+#define RADIO_GPIO_IRQ_LINE       EXTI_Line0
 
-#define RADIO_SPI                 SPI2
-#define RADIO_SPI_CLK             RCC_APB1Periph_SPI2
-#define RADIO_GPIO_SPI_PORT       GPIOB
-#define RADIO_GPIO_SPI_CLK        RCC_APB2Periph_GPIOB
-#define RADIO_GPIO_SPI_SCK        GPIO_Pin_13
-#define RADIO_GPIO_SPI_MISO       GPIO_Pin_14
-#define RADIO_GPIO_SPI_MOSI       GPIO_Pin_15
+#define RADIO_SPI                 SPI1
+#define RADIO_SPI_CLK             RCC_APB2Periph_SPI1
+#define RADIO_GPIO_SPI_PORT       GPIOA
+#define RADIO_GPIO_SPI_CLK        RCC_APB2Periph_GPIOA
+#define RADIO_GPIO_SPI_SCK        GPIO_Pin_5
+#define RADIO_GPIO_SPI_MISO       GPIO_Pin_6
+#define RADIO_GPIO_SPI_MOSI       GPIO_Pin_7
 
 #define DUMMY_BYTE    0xA5
 
@@ -271,8 +272,12 @@ unsigned char nrfReadRX(char *buffer, int len)
   /* Send the read command with the address */
   status = spiSendByte(CMD_R_RX_PAYLOAD);
   /* Read LEN bytes */
-  for(i=0; i<len; i++)
+  for(i=0; i<len; i++) {
     buffer[i]=spiReceiveByte();
+    //if(buffer[i] != 0) {
+    //    DEBUG_PRINT("b %d %d 0x%x\n", i, len, buffer[i]);
+    //}
+  }
 
   RADIO_DIS_CS();
 
@@ -326,6 +331,7 @@ void nrfSetAddress(unsigned int pipe, char* address)
     len = 1;
 
   nrfWriteReg(REG_RX_ADDR_P0 + pipe, address, len);
+  nrfWriteReg(REG_TX_ADDR, address, len);
 }
 
 void nrfSetEnable(bool enable)
@@ -363,7 +369,7 @@ void nrfInit(void)
                          RADIO_GPIO_CE_PERIF | RADIO_GPIO_IRQ_PERIF, ENABLE);
 
   /* Enable SPI and GPIO clocks */
-  RCC_APB1PeriphClockCmd(RADIO_SPI_CLK, ENABLE);
+  RCC_APB2PeriphClockCmd(RADIO_SPI_CLK, ENABLE);
 
   /* Configure main clock */
   GPIO_InitStructure.GPIO_Pin = RADIO_GPIO_CLK;

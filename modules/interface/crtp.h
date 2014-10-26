@@ -43,6 +43,36 @@ typedef enum {
   CRTP_PORT_LINK        = 0x0F,
 } CRTPPort;
 
+
+#if defined(__CC_ARM)
+#pragma anon_unions
+
+typedef __packed struct _CRTPPacket
+{
+  uint8_t size;
+  __packed union {
+    __packed struct {
+      __packed union {
+        uint8_t header;
+        __packed struct {
+#ifndef CRTP_HEADER_COMPAT
+          uint8_t channel     : 2;
+          uint8_t reserved    : 2;
+          uint8_t port        : 4;
+#else
+          uint8_t channel  : 2;
+          uint8_t port     : 4;
+          uint8_t reserved : 2;
+#endif
+        };
+      };
+      uint8_t data[CRTP_MAX_DATA_SIZE];
+    };
+    uint8_t raw[CRTP_MAX_DATA_SIZE+1];
+  };
+}  CRTPPacket;
+
+#else
 typedef struct _CRTPPacket
 {
   uint8_t size;
@@ -67,6 +97,8 @@ typedef struct _CRTPPacket
     uint8_t raw[CRTP_MAX_DATA_SIZE+1];
   };
 } __attribute__((packed)) CRTPPacket;
+
+#endif
 
 typedef void (*CrtpCallback)(CRTPPacket *);
 

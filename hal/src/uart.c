@@ -103,17 +103,18 @@ void uartInit(void)
 
   /* Enable GPIO and USART clock */
   RCC_APB2PeriphClockCmd(UART_GPIO_PERIF, ENABLE);
-  RCC_APB1PeriphClockCmd(UART_PERIF, ENABLE);
+  //RCC_APB1PeriphClockCmd(UART_PERIF, ENABLE);
+  RCC_APB2PeriphClockCmd(UART_PERIF, ENABLE);
 
   /* Configure USART Rx as input floating */
   GPIO_InitStructure.GPIO_Pin   = UART_GPIO_RX;
   GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN_FLOATING;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_Init(UART_GPIO_PORT, &GPIO_InitStructure);
 /* Configure USART Tx as alternate function push-pull */
   GPIO_InitStructure.GPIO_Pin   = UART_GPIO_TX;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF_PP;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_Init(UART_GPIO_PORT, &GPIO_InitStructure);
 
 #if defined(UART_OUTPUT_TRACE_DATA) || defined(ADC_OUTPUT_RAW_DATA) || defined(IMU_OUTPUT_RAW_DATA_ON_UART)
   USART_InitStructure.USART_BaudRate            = 2000000;
@@ -128,11 +129,12 @@ void uartInit(void)
   USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
   USART_Init(UART_TYPE, &USART_InitStructure);
 
+#if 1
 #if defined(UART_OUTPUT_TRACE_DATA) || defined(ADC_OUTPUT_RAW_DATA)
   uartDmaInit();
 #else
   // Configure Tx buffer empty interrupt
-  NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannel = UART_IRQ;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -148,6 +150,8 @@ void uartInit(void)
   packetDelivery = xQueueCreate(2, sizeof(CRTPPacket));
   uartDataDelivery = xQueueCreate(40, sizeof(uint8_t));
 #endif
+#endif
+
   //Enable it
   USART_Cmd(UART_TYPE, ENABLE);
   
@@ -168,8 +172,9 @@ void uartRxTask(void *param)
   uint8_t dataIndex = 0;
   uint8_t crc = 0;
   CRTPPacket p;
+	uint8_t counter = 0;
   rxState = waitForFirstStart;
-  uint8_t counter = 0;
+  
   while(1)
   {
     if (xQueueReceive(uartDataDelivery, &c, UART_DATA_TIMEOUT_TICKS) == pdTRUE)
@@ -298,12 +303,23 @@ static int uartSetEnable(bool enable)
   return 0;
 }
 
+#if defined(__CC_ARM)
+static struct crtpLinkOperations uartOp =
+{
+  uartSetEnable,
+  uartSendCRTPPacket,
+  uartReceiveCRTPPacket,
+	NULL,
+	NULL
+};
+#else
 static struct crtpLinkOperations uartOp =
 {
   .setEnable         = uartSetEnable,
   .sendPacket        = uartSendCRTPPacket,
   .receivePacket     = uartReceiveCRTPPacket,
 };
+#endif
 
 struct crtpLinkOperations * uartGetLink()
 {

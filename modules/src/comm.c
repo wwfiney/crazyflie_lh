@@ -45,10 +45,12 @@ void commInit(void)
     return;
 
 #ifdef USE_ESKYLINK
-  eskylinkInit();
+  //eskylinkInit();
 #else
   radiolinkInit();
 #endif
+
+    return;
 
   crtpInit();
 

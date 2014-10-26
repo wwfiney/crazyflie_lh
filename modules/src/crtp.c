@@ -44,11 +44,19 @@
 static bool isInit;
 
 static int nopFunc(void);
+#if defined(__CC_ARM)
+static struct crtpLinkOperations nopLink = {
+  (void*) nopFunc,
+  (void*) nopFunc,
+  (void*) nopFunc,
+}; 
+#else
 static struct crtpLinkOperations nopLink = {
   .setEnable         = (void*) nopFunc,
   .sendPacket        = (void*) nopFunc,
   .receivePacket     = (void*) nopFunc,
 }; 
+#endif
 
 static struct crtpLinkOperations *link = &nopLink;
 

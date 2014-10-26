@@ -74,6 +74,25 @@ struct param_s {
 #define PARAM_FLOAT (PARAM_4BYTES | PARAM_TYPE_FLOAT | PARAM_SIGNED)
 
 /* Macros */
+#if defined(__CC_ARM)
+#define PARAM_ADD(TYPE, NAME, ADDRESS) \
+   { TYPE, #NAME, (void*)(ADDRESS), },
+
+#define PARAM_ADD_GROUP(TYPE, NAME, ADDRESS) \
+   { \
+  TYPE, #NAME, (void*)(ADDRESS), },
+
+#define PARAM_GROUP_START(NAME)  \
+  static const struct param_s __params_##NAME[] __attribute__((section(".param." #NAME), used)) = { \
+  PARAM_ADD_GROUP(PARAM_GROUP | PARAM_START, NAME, 0x0)
+
+//#define PARAM_GROUP_START_SYNC(NAME, LOCK) PARAM_ADD_GROUP(PARAM_GROUP | PARAM_START, NAME, LOCK);
+
+#define PARAM_GROUP_STOP(NAME) \
+  PARAM_ADD_GROUP(PARAM_GROUP | PARAM_STOP, stop_##NAME, 0x0) \
+  };
+
+#else
 #define PARAM_ADD(TYPE, NAME, ADDRESS) \
    { .type = TYPE, .name = #NAME, .address = (void*)(ADDRESS), },
 
@@ -90,6 +109,8 @@ struct param_s {
 #define PARAM_GROUP_STOP(NAME) \
   PARAM_ADD_GROUP(PARAM_GROUP | PARAM_STOP, stop_##NAME, 0x0) \
   };
+	
+#endif
 
 #endif /* __PARAM_H__ */
 

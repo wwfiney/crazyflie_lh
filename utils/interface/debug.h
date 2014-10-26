@@ -34,6 +34,7 @@
 #define DEBUG_FMT(fmt) fmt
 #endif
 
+#if 0
 #ifdef DEBUG_PRINT_ON_UART
   #ifndef ENABLE_UART
     #error "Need to define ENABLE_UART to use DEBUG_PRINT_ON_UART"
@@ -42,6 +43,10 @@
 #else
   #define DEBUG_PRINT(fmt, ...) //consolePrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
 #endif
+#endif
+
+#define DEBUG_PRINT(fmt, ...) uartPrintf(DEBUG_FMT(fmt), ##__VA_ARGS__)
+
 
 #ifdef TEST_PRINTS
   #define TEST_AND_PRINT(e, msgOK, msgFail)\

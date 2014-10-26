@@ -26,7 +26,11 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#if defined(__CC_ARM)
+#define size_t unsigned int
+#else
 #include <unistd.h>
+#endif
 
 #include "configblock.h"
 
@@ -66,6 +70,7 @@ static uint8_t calculate_cksum(void* data, size_t len)
 
 int configblockInit(void)
 {
+    return 0;   //test for lh
   configblock = (void*)CONFIG_BLOCK_ADDRESS;
 
   //Verify the config block

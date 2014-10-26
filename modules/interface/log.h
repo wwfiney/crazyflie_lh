@@ -57,6 +57,25 @@ struct log_s {
 #define LOG_STOP  0
 
 /* Macros */
+#if defined(__CC_ARM)
+#define LOG_ADD(TYPE, NAME, ADDRESS) \
+   { TYPE, #NAME, (void*)(ADDRESS), },
+
+#define LOG_ADD_GROUP(TYPE, NAME, ADDRESS) \
+   { \
+  TYPE, #NAME, (void*)(ADDRESS), },
+
+#define LOG_GROUP_START(NAME)  \
+  static const struct log_s __logs_##NAME[] __attribute__((section(".log." #NAME), used)) = { \
+  LOG_ADD_GROUP(LOG_GROUP | LOG_START, NAME, 0x0)
+
+//#define LOG_GROUP_START_SYNC(NAME, LOCK) LOG_ADD_GROUP(LOG_GROUP | LOG_START, NAME, LOCK);
+
+#define LOG_GROUP_STOP(NAME) \
+  LOG_ADD_GROUP(LOG_GROUP | LOG_STOP, stop_##NAME, 0x0) \
+  };
+
+#else
 #define LOG_ADD(TYPE, NAME, ADDRESS) \
    { .type = TYPE, .name = #NAME, .address = (void*)(ADDRESS), },
 
@@ -73,6 +92,8 @@ struct log_s {
 #define LOG_GROUP_STOP(NAME) \
   LOG_ADD_GROUP(LOG_GROUP | LOG_STOP, stop_##NAME, 0x0) \
   };
+	
+#endif
 
 #endif /* __LOG_H__ */
 

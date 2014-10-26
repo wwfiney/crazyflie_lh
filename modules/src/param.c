@@ -54,8 +54,16 @@ void paramTOCProcess(int command);
 
 
 //These are set by the Linker
+#if defined(__CC_ARM)
+extern unsigned int Image$$PARAM$$Base;
+extern unsigned int Image$$PARAM$$Length;
+extern unsigned int Image$$PARAM$$ZI$$Length;
+
+#else
+
 extern struct param_s _param_start;
 extern struct param_s _param_stop;
+#endif
 
 //The following two function SHALL NOT be called outside paramTask!
 static void paramWriteProcess(int id, void*);
@@ -76,9 +84,13 @@ void paramInit(void)
 
   if(isInit)
     return;
-
+#if defined(__CC_ARM)
+    params = (struct param_s *)&Image$$PARAM$$Base;
+  paramsLen = (int)&Image$$PARAM$$Length + (int)&Image$$PARAM$$ZI$$Length;
+#else
   params = &_param_start;
   paramsLen = &_param_stop - &_param_start;
+#endif
   paramsCrc = crcSlow(params, paramsLen);
   
   for (i=0; i<paramsLen; i++)

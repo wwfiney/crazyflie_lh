@@ -31,7 +31,12 @@
 void extiInit();
 bool extiTest();
 
+
+#if defined(__CC_ARM)
+__inline void extiInterruptHandler(void);
+#else
 inline void extiInterruptHandler(void);
+#endif
 
 #endif /* __EXTI_H__ */
 
