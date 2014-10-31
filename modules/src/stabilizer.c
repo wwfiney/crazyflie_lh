@@ -279,7 +279,9 @@ static void stabilizerTask(void* param)
                                      &rollRateDesired, &pitchRateDesired, &yawRateDesired);
         attitudeCounter = 0;
 
+        //DEBUG_PRINT("%.2f %.2f %.2f\n", eulerRollActual, gyro.x, rollRateDesired);
         //DEBUG_PRINT("%.2f %.2f %.2f\n", eulerPitchActual, gyro.y, pitchRateDesired);
+        //DEBUG_PRINT("%.2f %.2f %.2f\n", eulerYawActual);
       }
 
       // 100HZ
@@ -328,13 +330,15 @@ static void stabilizerTask(void* param)
 
 #if 0
       {
-        float tempprint = actuatorPitch;
+        float tempprint = actuatorRoll;
+        DEBUG_PRINT("%.2f ", tempprint);
+        tempprint = actuatorPitch;
         DEBUG_PRINT("%.2f\n", tempprint);
         //DEBUG_PRINT("%d %d %d %d\n", actuatorThrust, actuatorRoll, actuatorPitch, -actuatorYaw);
       }
 #endif
       
-//#define TUNE_ROLL
+//#define TUNE_PITCH
       if (actuatorThrust > 0)
       {
 #if defined(TUNE_ROLL)
@@ -458,10 +462,13 @@ static void distributePower(const uint16_t thrust, const int16_t roll,
   //roll = roll >> 1;
   //pitch = pitch >> 1;
   //if(thrust > 12000) {
-  motorPowerM1 = limitThrust(thrust + roll_val + pitch_val - yaw);
-  motorPowerM2 = limitThrust(thrust + roll_val - pitch_val + yaw);
-  motorPowerM3 =  limitThrust(thrust - roll_val - pitch_val - yaw);
-  motorPowerM4 =  limitThrust(thrust - roll_val + pitch_val + yaw);
+    motorPowerM1 =  limitThrust(thrust - roll_val + pitch_val - yaw);
+    motorPowerM2 =  limitThrust(thrust + roll_val + pitch_val + yaw);
+    motorPowerM3 = limitThrust(thrust + roll_val - pitch_val - yaw);
+    motorPowerM4 = limitThrust(thrust - roll_val - pitch_val + yaw);
+  
+  
+  
   //} else {
   //  motorPowerM1 = 0;
   //motorPowerM2 = 0;

@@ -317,17 +317,22 @@ void imu6Read(Axis3f* gyroOut, Axis3f* accOut)
   imuAccAlignToGravity(&accelLPF, &accelLPFAligned);
 
   // Re-map outputs
-  #if 0
-  gyroOut->y = (gyroMpu.x - gyroBias.bias.x) * IMU_DEG_PER_LSB_CFG;
+  #if 1
+  gyroOut->y = -((gyroMpu.x - gyroBias.bias.x) * IMU_DEG_PER_LSB_CFG);
   gyroOut->x = (gyroMpu.y - gyroBias.bias.y) * IMU_DEG_PER_LSB_CFG;
+  gyroOut->z = (gyroMpu.z - gyroBias.bias.z) * IMU_DEG_PER_LSB_CFG;
+  accOut->y = -((accelLPFAligned.x - accelBias.bias.x) * IMU_G_PER_LSB_CFG);
+  accOut->x = (accelLPFAligned.y - accelBias.bias.y) * IMU_G_PER_LSB_CFG;
+  accOut->z = (accelLPFAligned.z - accelBias.bias.z) * IMU_G_PER_LSB_CFG;
   #else
     gyroOut->x = (gyroMpu.x - gyroBias.bias.x) * IMU_DEG_PER_LSB_CFG;
     gyroOut->y = (gyroMpu.y - gyroBias.bias.y) * IMU_DEG_PER_LSB_CFG;
-  #endif
-  gyroOut->z = (gyroMpu.z - gyroBias.bias.z) * IMU_DEG_PER_LSB_CFG;
+    gyroOut->z = (gyroMpu.z - gyroBias.bias.z) * IMU_DEG_PER_LSB_CFG;
   accOut->x = (accelLPFAligned.x - accelBias.bias.x) * IMU_G_PER_LSB_CFG;
   accOut->y = (accelLPFAligned.y - accelBias.bias.y) * IMU_G_PER_LSB_CFG;
   accOut->z = (accelLPFAligned.z - accelBias.bias.z) * IMU_G_PER_LSB_CFG;
+  #endif
+  
 
 //  uartSendData(sizeof(Axis3f), (uint8_t*)gyroOut);
 //  uartSendData(sizeof(Axis3f), (uint8_t*)accOut);
