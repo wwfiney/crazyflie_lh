@@ -78,11 +78,11 @@ bool commanderTest(void)
 //lh test
 void updateRPY(float roll, float pitch, float yaw, uint16_t thrust)
 {
-    if(thrust > 1200) {
-        thrust = MIN_THRUST + (thrust - 1000) * 50;
-    } else {
-        thrust = 0;
-    }
+    //if(thrust > 1200) {
+    //    thrust = MIN_THRUST + (thrust - 1000) * 50;
+    //} else {
+    //    thrust = 0;
+    //}
     
     targetVal[!side].roll = roll;
     targetVal[!side].pitch = pitch;
@@ -167,7 +167,7 @@ void commanderGetThrust(uint16_t* thrust)
   uint16_t rawThrust = targetVal[usedSide].thrust;
 
 #if 0
-  *thrust = 10000;
+  *thrust = 8000;
 #else
 
 

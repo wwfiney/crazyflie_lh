@@ -317,7 +317,7 @@ void imu6Read(Axis3f* gyroOut, Axis3f* accOut)
   imuAccAlignToGravity(&accelLPF, &accelLPFAligned);
 
   // Re-map outputs
-  #if 1
+  #if 0
   gyroOut->y = (gyroMpu.x - gyroBias.bias.x) * IMU_DEG_PER_LSB_CFG;
   gyroOut->x = (gyroMpu.y - gyroBias.bias.y) * IMU_DEG_PER_LSB_CFG;
   #else

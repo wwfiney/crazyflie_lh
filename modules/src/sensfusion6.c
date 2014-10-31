@@ -72,7 +72,6 @@ bool sensfusion6Test(void)
   return isInit;
 }
 
-
 #ifdef MADWICK_QUATERNION_IMU
 // Implementation of Madgwick's IMU and AHRS algorithms.
 // See: http://www.x-io.co.uk/open-source-ahrs-with-x-imu

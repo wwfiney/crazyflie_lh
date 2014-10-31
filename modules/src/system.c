@@ -110,7 +110,6 @@ bool systemTest()
 /* Private functions implementation */
 
 extern int paramsLen;
-
 void systemTask(void *arg)
 {
   bool pass = true;
@@ -129,7 +128,7 @@ void systemTask(void *arg)
 
   uartInit();
 
-  vTaskDelay(M2T(4000));
+  vTaskDelay(M2T(3000));
 
 #if 1
 

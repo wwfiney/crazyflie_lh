@@ -34,6 +34,8 @@
 #define DEBUG_FMT(fmt) fmt
 #endif
 
+#define LH_FLY
+
 #if 0
 #ifdef DEBUG_PRINT_ON_UART
   #ifndef ENABLE_UART

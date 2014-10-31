@@ -139,6 +139,9 @@ static struct crtpLinkOperations radioOp =
 };
 #endif
 
+float g_pkp = 0.0;
+float g_pki = 0.0;
+float g_pkd = 0.0;
 extern void updateRPY(float roll, float pitch, float yaw, uint16_t thrust);
 /* Radio task handles the CRTP packet transfers as well as the radio link
  * specific communications (eg. Scann and ID ports, communication error handling
@@ -152,6 +155,7 @@ static void radiolinkTask(void * arg)
   int i;
   bool havedata = false;
     uint16_t thrust_test = 0;
+    uint32_t thrust_temp = 0;
     float roll_test = 0;
     float pitch_test = 0;
     float yaw_test = 0;
@@ -184,27 +188,43 @@ static void radiolinkTask(void * arg)
       {
         //Fetch the data
         pk.raw.size = dataLen-1;
-        //nrfReadRX((char *)pk.raw.data, dataLen);
+        #ifndef LH_FLY
+        nrfReadRX((char *)pk.raw.data, dataLen);
+        #else
         nrfReadRX(recbuffer, dataLen);
 
+    #define LH_THRUST_MIN     1000
+    #define LH_THRUST_MAX     2000
+
+    #define LH_MICRO_ADJUST 199
     #define LH_ROLL_MIN     901
-    #define LH_ROLL_MID     1387
+    #define LH_ROLL_MID     (1387 + LH_MICRO_ADJUST /2)
     #define LH_ROLL_MAX     1901
-    #define LH_ROLL_LIMIT   40.0
+    #define LH_ROLL_LIMIT   30.0
 
-    #define LH_PITCH_MIN     945
-    #define LH_PITCH_MID     1462
-    #define LH_PITCH_MAX     1945
-    #define LH_PITCH_LIMIT   40.0
+    #define LH_PITCH_MIN     900
+    #define LH_PITCH_MID     (1417 + LH_MICRO_ADJUST /2)
+    #define LH_PITCH_MAX     (1900 + LH_MICRO_ADJUST)
+    #define LH_PITCH_LIMIT   30.0
 
-    #define LH_YAW_MIN     937
-    #define LH_YAW_MID     1487
-    #define LH_YAW_MAX     1937
-    #define LH_YAW_LIMIT   40
+    #define LH_YAW_MIN     901
+    #define LH_YAW_MID     (1415 + 199 /2)
+    #define LH_YAW_MAX     (1900 + LH_MICRO_ADJUST)
+    #define LH_YAW_LIMIT   200
+    
         thrust_test = recbuffer[6] + (recbuffer[7] << 8);
         roll_test = recbuffer[0] + (recbuffer[1] << 8);
         pitch_test = recbuffer[2] + (recbuffer[3] << 8);
         yaw_test = recbuffer[4] + (recbuffer[5] << 8);
+
+        g_pkp = (pitch_test-1417) * 500 / 199;
+        g_pki = (roll_test-1387) * 5 / 199;
+        g_pkd = (yaw_test-1415) * 5 / 199;
+
+        //DEBUG_PRINT("raw:%.2f\n", yaw_test);
+        thrust_temp = (thrust_test - LH_THRUST_MIN) * 65536 / (LH_THRUST_MAX - LH_THRUST_MIN) ;
+        //DEBUG_PRINT("ttmp:%d\n", thrust_temp);
+        thrust_test = thrust_temp;
 
         roll_test = (roll_test - LH_ROLL_MID) / ((LH_ROLL_MAX-LH_ROLL_MIN) / 2 / LH_ROLL_LIMIT);
         if(roll_test > LH_ROLL_LIMIT)
@@ -227,7 +247,13 @@ static void radiolinkTask(void * arg)
 
         //DEBUG_PRINT("y:%f\n", yaw_test);
 #endif
-        updateRPY(roll_test, pitch_test, yaw_test, thrust_test);
+    //roll_test = 0;
+       // pitch_test = 0;
+        //yaw_test = 0;
+
+        
+
+        updateRPY(roll_test, -pitch_test, yaw_test, thrust_test);
 
 #if 0
         DEBUG_PRINT("t:%d\n", thrust_test);
@@ -250,18 +276,20 @@ static void radiolinkTask(void * arg)
             DEBUG_PRINT("all 0\n");
         }
 #endif
+    #endif
 
-
-        //nrfWriteAck(0, recbuffer, 8);
+        #ifndef LH_FLY
+        nrfWriteAck(0, recbuffer, 8);
 
         //Push it in the queue (If overflow, the packet is dropped)
-        //if (!CRTP_IS_NULL_PACKET(pk.crtp))  //Don't follow the NULL packets
-        //  xQueueSend( rxQueue, &pk, 0);
+        if (!CRTP_IS_NULL_PACKET(pk.crtp))  //Don't follow the NULL packets
+          xQueueSend( rxQueue, &pk, 0);
+        #endif
       }
     }
 
     //Push the data to send (Loop until the TX Fifo is full or there is no more data to send)
-    #if 0
+    #ifndef LH_FLY
     while( (uxQueueMessagesWaiting((xQueueHandle)txQueue) > 0) && !(nrfRead1Reg(REG_FIFO_STATUS)&0x20) )
     {
       xQueueReceive(txQueue, &pk, 0);
@@ -282,7 +310,11 @@ static void radiolinkTask(void * arg)
 static void radiolinkInitNRF24L01P(void)
 {
   int i;
-  char radioAddress[5] = {0x12,0x34,0x56,0x78,0xA0};//for Liehuo {0xE7, 0xE7, 0xE7, 0xE7, 0xE7};
+  #ifndef LH_FLY
+    char radioAddress[5] = {0xE7, 0xE7, 0xE7, 0xE7, 0xE7};
+  #else
+  char radioAddress[5] = {0x12,0x34,0x56,0x78,0xA0};//for Liehuo
+  #endif
 
   //Set the radio channel
   nrfSetChannel(configblockGetRadioChannel());
@@ -295,10 +327,7 @@ static void radiolinkInitNRF24L01P(void)
   nrfWrite1Reg(REG_CONFIG, 0x3F);
   vTaskDelay(M2T(2)); //Wait for the chip to be ready
   // Enable the dynamic payload size and the ack payload for the pipe 0
-  //DEBUG_PRINT("Before 0x%x\n", nrfRead1Reg(REG_FEATURE));
   nrfWrite1Reg(REG_FEATURE, 0x06);
-  //nrfWrite1Reg(REG_FEATURE, 0x04);
-  //DEBUG_PRINT("After 0x%x\n", nrfRead1Reg(REG_FEATURE));
   nrfWrite1Reg(REG_DYNPD, 0x01);
 
   //Flush RX

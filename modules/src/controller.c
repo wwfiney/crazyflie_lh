@@ -89,6 +89,9 @@ bool controllerTest()
 {
   return isInit;
 }
+extern float g_pkp;
+extern float g_pki;
+extern float g_pkd;
 
 void controllerCorrectRatePID(
        float rollRateActual, float pitchRateActual, float yawRateActual,
@@ -98,6 +101,8 @@ void controllerCorrectRatePID(
   TRUNCATE_SINT16(rollOutput, pidUpdate(&pidRollRate, rollRateActual, TRUE));
 
   pidSetDesired(&pidPitchRate, pitchRateDesired);
+  //pidSetKp(&pidPitchRate, g_pkp);
+  //DEBUG_PRINT("pkp:%.2f\n", pidPitchRate.kp);
   TRUNCATE_SINT16(pitchOutput, pidUpdate(&pidPitchRate, pitchRateActual, TRUE));
 
   pidSetDesired(&pidYawRate, yawRateDesired);
@@ -120,7 +125,7 @@ void controllerCorrectAttitudePID(
   // Update PID for yaw axis
   
   yawError = eulerYawDesired - eulerYawActual;
-  //DEBUG_PRINT("+ye:%f\n", yawError);
+  //DEBUG_PRINT("+ye:%.2f\n", yawError);
   if (yawError > 180.0)
     yawError -= 360.0;
   else if (yawError < -180.0)

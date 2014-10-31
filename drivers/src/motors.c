@@ -49,10 +49,10 @@
 
 #define MOTORS_GPIO_PERIF         RCC_APB2Periph_GPIOA
 #define MOTORS_GPIO_PORT          GPIOA
-#define MOTORS_GPIO_M1            GPIO_Pin_3 // T2_CH4
-#define MOTORS_GPIO_M2            GPIO_Pin_1 // T2_CH2
-#define MOTORS_GPIO_M3            GPIO_Pin_0 // T2_CH1
-#define MOTORS_GPIO_M4            GPIO_Pin_2 // T2_CH3
+#define MOTORS_GPIO_M1            GPIO_Pin_1 // T2_CH2
+#define MOTORS_GPIO_M2            GPIO_Pin_0 // T2_CH1
+#define MOTORS_GPIO_M3            GPIO_Pin_2 // T2_CH3
+#define MOTORS_GPIO_M4            GPIO_Pin_3 // T2_CH4
 
 /* Utils Conversion macro */
 #define C_BITS_TO_16(X) ((X)<<(16-MOTORS_PWM_BITS))
@@ -161,16 +161,16 @@ void motorsSetRatio(int id, uint16_t ratio)
   switch(id)
   {
     case MOTOR_M1:
-      TIM_SetCompare4(MOTORS_GPIO_TIM_M1_2, C_16_TO_BITS(ratio));
-      break;
-    case MOTOR_M2:
       TIM_SetCompare2(MOTORS_GPIO_TIM_M1_2, C_16_TO_BITS(ratio));
       break;
+    case MOTOR_M2:
+      TIM_SetCompare1(MOTORS_GPIO_TIM_M1_2, C_16_TO_BITS(ratio));
+      break;
     case MOTOR_M3:
-      TIM_SetCompare1(MOTORS_GPIO_TIM_M3_4, C_16_TO_BITS(ratio));
+      TIM_SetCompare3(MOTORS_GPIO_TIM_M3_4, C_16_TO_BITS(ratio));
       break;
     case MOTOR_M4:
-      TIM_SetCompare3(MOTORS_GPIO_TIM_M3_4, C_16_TO_BITS(ratio));
+      TIM_SetCompare4(MOTORS_GPIO_TIM_M3_4, C_16_TO_BITS(ratio));
       break;
   }
 }
@@ -180,13 +180,13 @@ int motorsGetRatio(int id)
   switch(id)
   {
     case MOTOR_M1:
-      return C_BITS_TO_16(TIM_GetCapture4(MOTORS_GPIO_TIM_M1_2));
-    case MOTOR_M2:
       return C_BITS_TO_16(TIM_GetCapture2(MOTORS_GPIO_TIM_M1_2));
+    case MOTOR_M2:
+      return C_BITS_TO_16(TIM_GetCapture1(MOTORS_GPIO_TIM_M1_2));
     case MOTOR_M3:
-      return C_BITS_TO_16(TIM_GetCapture1(MOTORS_GPIO_TIM_M3_4));
-    case MOTOR_M4:
       return C_BITS_TO_16(TIM_GetCapture3(MOTORS_GPIO_TIM_M3_4));
+    case MOTOR_M4:
+      return C_BITS_TO_16(TIM_GetCapture4(MOTORS_GPIO_TIM_M3_4));
   }
 
   return -1;

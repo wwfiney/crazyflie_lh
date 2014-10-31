@@ -278,6 +278,8 @@ static void stabilizerTask(void* param)
                                      eulerRollDesired, eulerPitchDesired, -eulerYawDesired,
                                      &rollRateDesired, &pitchRateDesired, &yawRateDesired);
         attitudeCounter = 0;
+
+        //DEBUG_PRINT("%.2f %.2f %.2f\n", eulerPitchActual, gyro.y, pitchRateDesired);
       }
 
       // 100HZ
@@ -307,6 +309,7 @@ static void stabilizerTask(void* param)
         //}
 
       // TODO: Investigate possibility to subtract gyro drift.
+    //DEBUG_PRINT("%.2f %.2f\n", gyro.y, pitchRateDesired);
       controllerCorrectRatePID(gyro.x, -gyro.y, gyro.z,
                                rollRateDesired, pitchRateDesired, yawRateDesired);
 
@@ -320,11 +323,18 @@ static void stabilizerTask(void* param)
       else
       {
         // Added so thrust can be set to 0 while in altitude hold mode after disconnect
-        //commanderWatchdog();
+        commanderWatchdog();
       }
 
-      //DEBUG_PRINT("%d %d %d %d\n", actuatorThrust, actuatorRoll, actuatorPitch, -actuatorYaw);
-//#define TUNE_PITCH
+#if 0
+      {
+        float tempprint = actuatorPitch;
+        DEBUG_PRINT("%.2f\n", tempprint);
+        //DEBUG_PRINT("%d %d %d %d\n", actuatorThrust, actuatorRoll, actuatorPitch, -actuatorYaw);
+      }
+#endif
+      
+//#define TUNE_ROLL
       if (actuatorThrust > 0)
       {
 #if defined(TUNE_ROLL)
@@ -335,6 +345,8 @@ static void stabilizerTask(void* param)
         distributePower(actuatorThrust, 0, 0, -actuatorYaw);
 #else
         distributePower(actuatorThrust, actuatorRoll, actuatorPitch, -actuatorYaw);
+    //distributePower(actuatorThrust, actuatorRoll, actuatorPitch, 0);
+
 #endif
       }
       else
@@ -438,24 +450,24 @@ static void distributePower(const uint16_t thrust, const int16_t roll,
     int16_t pitch_val = pitch >> 1;
 
     //if(roll_val > ROLL_TEMP)
-        //roll_val = roll_val - ROLL_TEMP;
+        //pitch_val = pitch_val + ROLL_TEMP;
 
     //if((yaw > 0) || (yaw < 0)) {
         //DEBUG_PRINT("y:%d\n", yaw);
     //}
   //roll = roll >> 1;
   //pitch = pitch >> 1;
-  if(thrust > 12000) {
-  motorPowerM1 = limitThrust(thrust - roll_val + pitch_val + yaw);
-  motorPowerM2 = limitThrust(thrust - roll_val - pitch_val - yaw);
-  motorPowerM3 =  limitThrust(thrust + roll_val - pitch_val + yaw);
-  motorPowerM4 =  limitThrust(thrust + roll_val + pitch_val - yaw);
-  } else {
-    motorPowerM1 = 0;
-  motorPowerM2 = 0;
-  motorPowerM3 =  0;
-  motorPowerM4 =  0;
-  }
+  //if(thrust > 12000) {
+  motorPowerM1 = limitThrust(thrust + roll_val + pitch_val - yaw);
+  motorPowerM2 = limitThrust(thrust + roll_val - pitch_val + yaw);
+  motorPowerM3 =  limitThrust(thrust - roll_val - pitch_val - yaw);
+  motorPowerM4 =  limitThrust(thrust - roll_val + pitch_val + yaw);
+  //} else {
+  //  motorPowerM1 = 0;
+  //motorPowerM2 = 0;
+  //motorPowerM3 =  0;
+  //motorPowerM4 =  0;
+  //}
 #else // QUAD_FORMATION_NORMAL
   motorPowerM1 = limitThrust(thrust + pitch + yaw);
   motorPowerM2 = limitThrust(thrust - roll - yaw);
